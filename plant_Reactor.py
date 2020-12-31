@@ -78,6 +78,13 @@ class Plant:
         self.qc = qc
         self.log = []
 
+        self.plot_settings = {'title': 'Reactor',
+                              'xlabel': 'time (s)', 'ylabel': 'Temperature (K)'}
+        self.controls = {'setpoint': 10, 'runtime': 30, 'stepsize': 0.05,
+                         'kpmin': 0, 'kpmax': 100, 'kpstep': 10, 'kpset': 5,
+                         'kimin': 0, 'kimax': 100, 'kistep': 10, 'kiset': 5,
+                         'kdmin': 0, 'kdmax': 100, 'kdstep': 10, 'kdset': 5}
+
     def deriv(self, params, t):
         C, T, Tc = params
         dC = (q / V) * (Cf - C) - k(T) * C
@@ -95,6 +102,11 @@ class Plant:
         self.C, self.T, self.Tc = C, T, Tc
 
         return self.T
+
+    def reset(self):
+        self.C, self.T, self.Tc = [C0, T0, Tcf]  # initial condition
+        self.qc = qc
+        self.log = []
 
     def logger(self):
         return self.log

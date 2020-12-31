@@ -44,11 +44,21 @@ class FloatSlider(wx.Panel):
     def startPosition(self):
         return int((self.value / (self.maxVal - self.minVal)) * 10)
 
-    def getSliderValue(self):
+    def SetValue(self, value):
+        self.slider.SetValue(value)
+        self.change_text(value)
+
+    def SetRange(self, minValue, maxValue):
+        self.minVal = int(minValue)
+        self.maxVal = int(maxValue)
+        self.slider.SetMin(self.minVal)
+        self.slider.SetMax(self.maxVal)
+
+    def GetValue(self):
         return (self.maxVal - self.minVal) * self.slider.GetValue() / 10
 
     def onSliderChange(self, event):
-        value = self.getSliderValue()
+        value = self.GetValue()
         self.change_text(round(value, 2))
 
         # Child class posts event to the parent class
