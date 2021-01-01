@@ -34,7 +34,7 @@ class Plant:
         self.controls = {'setpoint': 10, 'runtime': 100, 'stepsize': 0.05,
                          'kpmin': 0, 'kpmax': 1000, 'kpstep': 100, 'kpset': 500,
                          'kimin': 0, 'kimax': 1000, 'kistep': 100, 'kiset': 500,
-                         'kdmin': 0, 'kdmax': 1000, 'kdstep': 100, 'kdset': 500}
+                         'kdmin': 0, 'kdmax': 1000, 'kdstep': 100, 'kdset': 0}
 
     def deriv(self, X, t):
         x, v, i = X

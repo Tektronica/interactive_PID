@@ -8,18 +8,23 @@ import wx
 
 
 class FloatSlider(wx.Panel):
-    def __init__(self, parent, value=0.0, minVal=0.0, maxVal=10.0, label="label"):
+    def __init__(self, parent, value=0.0, minVal=0.0, maxVal=10.0, label="label", id=''):
         super(FloatSlider, self).__init__(parent)
         self.parent = parent
         self.value = value
+        self.divisions = 10
+        self.freq = 1
         self.minVal = minVal
         self.maxVal = maxVal
+
         self.label = label
+        self.id = id
 
         # self.panel = wx.Panel(self, wx.ID_ANY)
         self.text_ctrl = wx.TextCtrl(self, wx.ID_ANY, str(self.value), style=wx.TE_CENTRE)
-        self.slider = wx.Slider(self, wx.ID_ANY, self.startPosition(), 0, 10, style=wx.SL_AUTOTICKS | wx.SL_HORIZONTAL)
-
+        self.slider = wx.Slider(self, wx.ID_ANY, self.startPosition(), 0, self.divisions,
+                                style=wx.SL_AUTOTICKS | wx.SL_HORIZONTAL)
+        self.SetRange(self.minVal, self.maxVal)
         # EVENT HANDLES ------------------------------------------------------------------------------------------------
         self.Bind(wx.EVT_SLIDER, self.onSliderChange, self.slider)
 
@@ -42,20 +47,30 @@ class FloatSlider(wx.Panel):
         grid_sizer_1.AddGrowableCol(1)
 
     def startPosition(self):
-        return int((self.value / (self.maxVal - self.minVal)) * 10)
-
-    def SetValue(self, value):
-        self.slider.SetValue(value)
-        self.change_text(value)
+        return int((self.value * self.divisions))
 
     def SetRange(self, minValue, maxValue):
-        self.minVal = int(minValue)
-        self.maxVal = int(maxValue)
-        self.slider.SetMin(self.minVal)
-        self.slider.SetMax(self.maxVal)
+        self.minVal = minValue
+        self.maxVal = maxValue
+
+        self.slider.SetMin(0)
+        self.slider.SetMax(self.divisions)
+
+    def SetTickFreq(self, freq):
+        divisions = int((self.maxVal - self.minVal) / freq)
+        if divisions >= 2:
+            self.divisions = divisions
+        self.freq = (self.maxVal - self.minVal) / divisions
+        self.slider.SetTickFreq(1)
 
     def GetValue(self):
-        return (self.maxVal - self.minVal) * self.slider.GetValue() / 10
+        self.value = round((self.slider.GetValue() / self.divisions) * self.maxVal, 2)
+        return self.value
+
+    def SetValue(self, value):
+        self.value = value
+        self.slider.SetValue(int(((self.value / self.maxVal) * self.divisions)))
+        self.change_text(self.value)
 
     def onSliderChange(self, event):
         value = self.GetValue()
@@ -70,6 +85,12 @@ class FloatSlider(wx.Panel):
 
     def change_text(self, s):
         self.text_ctrl.SetValue(str(s))
+
+    def setID(self, id):
+        self.id = str(id)
+
+    def getID(self):
+        return self.id
 
 
 def report_val(evt, name):

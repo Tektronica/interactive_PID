@@ -19,9 +19,9 @@ class Plant:
         self.plot_settings = {'title': 'Second Order ODE',
                               'xlabel': 'time (s)', 'ylabel': 'Ampltiude'}
         self.controls = {'setpoint': 10, 'runtime': 30, 'stepsize': 0.05,
-                         'kpmin': 0, 'kpmax': 100, 'kpstep': 10, 'kpset': 5,
-                         'kimin': 0, 'kimax': 100, 'kistep': 10, 'kiset': 5,
-                         'kdmin': 0, 'kdmax': 100, 'kdstep': 10, 'kdset': 5}
+                         'kpmin': 0, 'kpmax': 100, 'kpstep': 10, 'kpset': 50,
+                         'kimin': 0, 'kimax': 100, 'kistep': 10, 'kiset': 50,
+                         'kdmin': 0, 'kdmax': 100, 'kdstep': 10, 'kdset': 30}
 
     def deriv(self, x, t):
         y = x[0]

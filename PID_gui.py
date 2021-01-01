@@ -37,15 +37,15 @@ class MyFrame(wx.Frame):
         self.pCheck = wx.CheckBox(self.left_panel, wx.ID_ANY, "")
         # self.slider_1 = wx.Slider(self.left_panel, wx.ID_ANY, value=5, minValue=0, maxValue=10,
         #                           style=wx.SL_AUTOTICKS | wx.SL_HORIZONTAL | wx.SL_MIN_MAX_LABELS)
-        self.slider_1 = FloatSlider(self.left_panel, value=0.5, minVal=0, maxVal=1, label='Kp')
+        self.slider_1 = FloatSlider(self.left_panel, value=0.5, minVal=0, maxVal=1, label='Kp', id='Kp')
         self.iCheck = wx.CheckBox(self.left_panel, wx.ID_ANY, "")
         # self.slider_2 = wx.Slider(self.left_panel, wx.ID_ANY, value=5, minValue=0, maxValue=10,
         #                           style=wx.SL_AUTOTICKS | wx.SL_HORIZONTAL | wx.SL_MIN_MAX_LABELS)
-        self.slider_2 = FloatSlider(self.left_panel, value=0.5, minVal=0, maxVal=1, label='Ki')
+        self.slider_2 = FloatSlider(self.left_panel, value=0.5, minVal=0, maxVal=1, label='Ki', id='Ki')
         self.dCheck = wx.CheckBox(self.left_panel, wx.ID_ANY, "")
         # self.slider_3 = wx.Slider(self.left_panel, wx.ID_ANY, value=5, minValue=0, maxValue=10,
         #                           style=wx.SL_AUTOTICKS | wx.SL_HORIZONTAL | wx.SL_MIN_MAX_LABELS)
-        self.slider_3 = FloatSlider(self.left_panel, value=0.5, minVal=0, maxVal=1, label='Kd')
+        self.slider_3 = FloatSlider(self.left_panel, value=0.5, minVal=0, maxVal=1, label='Kd', id='Kd')
 
         # (RIGHT) PLOT Panel -------------------------------------------------------------------------------------------
         self.right_panel = wx.Panel(self.panel_2, wx.ID_ANY, style=wx.SIMPLE_BORDER)
@@ -80,8 +80,16 @@ class MyFrame(wx.Frame):
         # self.Bind(wx.EVT_SLIDER, lambda event: self.report_slider(event, "Ki"), self.slider_2)
         # self.Bind(wx.EVT_SLIDER, lambda event: self.report_slider(event, "Kd"), self.slider_3)
 
-        self.Bind(wx.EVT_SLIDER, lambda event: self.report_slider(event, "Kp"))
+        # self.Bind(wx.EVT_SLIDER, lambda event: self.report_slider(event, self.slider_1), self.slider_1.slider)
+        # self.Bind(wx.EVT_SLIDER, lambda event: self.report_slider(event, self.slider_1), self.slider_2.slider)
+        # self.Bind(wx.EVT_SLIDER, lambda event: self.report_slider(event, self.slider_1), self.slider_3.slider)
 
+        self.slider_1.slider.Bind(wx.EVT_COMMAND_SCROLL_THUMBTRACK,
+                                  lambda event: self.report_slider(event, self.slider_1))
+        self.slider_2.slider.Bind(wx.EVT_COMMAND_SCROLL_THUMBTRACK,
+                                  lambda event: self.report_slider(event, self.slider_2))
+        self.slider_3.slider.Bind(wx.EVT_COMMAND_SCROLL_THUMBTRACK,
+                                  lambda event: self.report_slider(event, self.slider_3))
         self.Freeze()
         self.__set_properties()
         self.__do_layout()
@@ -203,14 +211,6 @@ class MyFrame(wx.Frame):
         Kd = self.get_slider(self.slider_3)
         return setpoint, runtime, stepsize, Kp, Ki, Kd
 
-    def set_slider(self, params):
-        self.slider_1.SetRange(params['kpmin'], params['kpmax'])
-        self.slider_1.SetValue(params['kpset'])
-        self.slider_2.SetRange(params['kimin'], params['kimax'])
-        self.slider_2.SetValue(params['kiset'])
-        self.slider_3.SetRange(params['kdmin'], params['kdmax'])
-        self.slider_3.SetValue(params['kdset'])
-
     def get_slider(self, slider):
         if slider.IsEnabled():
             K = slider.GetValue()
@@ -221,7 +221,12 @@ class MyFrame(wx.Frame):
     # ------------------------------------------------------------------------------------------------------------------
     def setup(self):
         self.system = system.System(self.get_plant())
-        self.update_plot_labels(self.system.plant.plot_settings)
+        control_params = self.system.plant.controls
+        plot_params = self.system.plant.plot_settings
+
+        self.set_simulation(control_params)
+        self.set_sliders(control_params)
+        self.update_plot_labels(plot_params)
 
     def update(self):
         x, y = self.system.run(self.get_values())
@@ -229,11 +234,33 @@ class MyFrame(wx.Frame):
         self.plot({'x': x, 'y': y})
         time.sleep(0.01)
 
+    def set_simulation(self, params):
+        self.setpoint_text_ctrl.SetValue(str(params['setpoint']))
+        self.runtime_text_ctrl.SetValue(str(params['runtime']))
+        self.stepsize_text_ctrl.SetValue(str(params['stepsize']))
+
+    def set_sliders(self, params):
+        self.slider_1.SetRange(params['kpmin'], params['kpmax'])
+        self.slider_1.SetTickFreq(int(params['kpstep']))
+        self.slider_1.SetValue(params['kpset'])
+        self.slider_2.SetRange(params['kimin'], params['kimax'])
+        self.slider_2.SetTickFreq(int(params['kistep']))
+        self.slider_2.SetValue(params['kiset'])
+        self.slider_3.SetRange(params['kdmin'], params['kdmax'])
+        self.slider_3.SetTickFreq(int(params['kdstep']))
+        self.slider_3.SetValue(params['kdset'])
+
+    def report_slider(self, evt, slider):
+        print(f'The gain, {slider.id}, has changed to {slider.GetValue()}')
+        self.update()
+
     # ------------------------------------------------------------------------------------------------------------------
-    def report_combo(self, evt, text_name):
-        print(f'The {text_name} has changed to {evt.GetEventObject().GetValue()}')
+    def report_combo(self, evt, combo_name):
+        print(f'The {combo_name} has changed to {evt.GetEventObject().GetValue()}')
+        self.Freeze()
         self.setup()
         self.update()
+        self.Thaw()
 
     def report_text(self, evt, text_name):
         print(f'The {text_name} has changed to {evt.GetEventObject().GetValue()}')
@@ -246,10 +273,6 @@ class MyFrame(wx.Frame):
             slider.Disable()
         else:
             slider.Enable()
-        self.update()
-
-    def report_slider(self, evt, slider_name):
-        print(f'The gain, {slider_name}, has changed to {evt.GetEventObject().GetValue()}')
         self.update()
 
     # ------------------------------------------------------------------------------------------------------------------
